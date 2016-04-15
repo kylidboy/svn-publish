@@ -1,0 +1,49 @@
+#!/usr/bin/expect
+
+set timeout 30
+set host [lindex $argv 0]
+set username [lindex $argv 1]
+set password [lindex $argv 2]
+set srcfile [lindex $argv 3]
+set destfile [lindex $argv 4]
+set cleanscript [lindex $argv 5]
+
+spawn scp "${srcfile}" "${username}@${host}:${destfile}"
+
+expect {
+    "(yes/no)?"
+    {
+        send "yes\n"
+        expect "*assword:" {
+            send "${password}\n"
+        }
+    }
+
+    "*assword:"
+    {
+        send "${password}\n"
+    }
+}
+
+expect "100%"
+# expect "]$"
+expect eof
+
+spawn ssh "${username}@${host}" "tar -xzvf ${destfile} -C /opt/app/www/ --atime-preserve && rm ${destfile} && /opt/app/www/${cleanscript}"
+
+expect {
+    "(yes/no)?"
+    {
+        send "yes\n"
+        expect "*assword:" {
+            send "${password}\n"
+        }
+    }
+
+    "*assword:"
+    {
+        send "${password}\n"
+    }
+}
+
+expect eof
